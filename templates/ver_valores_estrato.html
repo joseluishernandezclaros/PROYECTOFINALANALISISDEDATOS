@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ver valores de un estrato en específico</title>
+  </head>
+  <body>
+    <!-- Reemplaza el campo de entrada con una lista desplegable en tu archivo index.html -->
+    <form action="/ver_valores_estrato" method="post">
+      <label for="nuevo_estrato">Nuevo Estrato Deseado:</label>
+      <select name="nuevo_estrato" required>
+        {% for i in range(1, 7) %}
+        <option value="{{ i }}">{{ i }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Actualizar y Ver Valores</button>
+    </form>
+
+    <h1>Ver valores de un estrato en específico, del 1 al 6</h1>
+    <p>Se están mostrando los datos para el Estrato {{ estrato_deseado }}.</p>
+
+    {% if grupo_estrato_html %} {{ grupo_estrato_html|safe }} {% else %}
+    <p>No hay información disponible para el estrato seleccionado.</p>
+    {% endif %}
+  </body>
+</html>

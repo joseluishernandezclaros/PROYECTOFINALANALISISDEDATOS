@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
@@ -230,6 +230,33 @@ def eliminar_estrato_cero():
         name='Conteo de Viviendas').to_html(classes='data', escape=False)
 
     return render_template('eliminar_estrato_cero.html', conteo_por_estrato_html=conteo_por_estrato_html, grafica_estrato=img_base64)
+
+# Ruta para ver valores de un estrato en específico, del 1 al 6
+
+
+# Variable para almacenar el estrato deseado, inicializada en 2 por defecto
+estrato_deseado = 1
+
+
+@app.route('/ver_valores_estrato', methods=['GET', 'POST'])
+def ver_valores_estrato():
+    global estrato_deseado
+
+    if request.method == 'POST':
+        # Si el formulario se envió, actualiza el estrato deseado
+        estrato_deseado = int(request.form['nuevo_estrato'])
+
+    # Filtrar el DataFrame para el estrato deseado
+    grupo_estrato = df[df['estrato'] == estrato_deseado]
+
+    # Mostrar los datos del estrato en la consola (puedes comentar estas líneas si no deseas imprimir en la consola)
+    print(f'Datos del Estrato {estrato_deseado}:')
+    print(grupo_estrato)
+
+    # Convertir los datos del estrato a HTML
+    grupo_estrato_html = grupo_estrato.to_html(classes='data', index=False)
+
+    return render_template('ver_valores_estrato.html', estrato_deseado=estrato_deseado, grupo_estrato_html=grupo_estrato_html)
 
 
 if __name__ == '__main__':
