@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Volver a verificar cuántas viviendas tienen área privada de 0 metros
+      cuadrados
+    </title>
+  </head>
+  <body>
+    <h1>
+      VOLVER A VERIFICAR CUANTAS VIVIENDAS TIENEN AREA PRIVADA DE 0 METROS
+      CUADRADOS
+    </h1>
+
+    <p>Número de viviendas con '0 m²': {{ num_viviendas_con_0_m2 }}</p>
+
+    {% if viviendas_con_0_m2_html %} {{ viviendas_con_0_m2_html|safe }} {% else
+    %}
+    <p>No hay viviendas con área privada de 0 metros cuadrados.</p>
+    {% endif %}
+  </body>
+</html>

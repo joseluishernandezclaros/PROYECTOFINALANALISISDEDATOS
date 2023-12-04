@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mostrar Nombres de Columnas</title>
+  </head>
+  <body>
+    <h1>MOSTRAR EL NOMBRE DE TODAS LAS COLUMNAS</h1>
+    <ul>
+      {% for column_name in column_names %}
+      <li>{{ column_name }}</li>
+      {% endfor %}
+    </ul>
+    <p>Número total de columnas: {{ num_columns }}</p>
+  </body>
+</html>

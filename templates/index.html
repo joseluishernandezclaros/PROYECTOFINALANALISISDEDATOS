@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROYECTO FINAL ANALISIS DE DATOS</title>
+    <style>
+      body {
+        display: flex;
+      }
+
+      #sidebar {
+        width: 400px;
+        height: 98vh; /* Altura de la ventana */
+        border: 2px double #ccc;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow-y: auto; /* Desbordamiento vertical con barra de desplazamiento */
+      }
+
+      #content-container {
+        flex-grow: 1;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow: auto; /* Desbordamiento con barras de desplazamiento si es necesario */
+      }
+
+      #iframe-container {
+        width: 100%;
+        height: 100%;
+        border: 2px double #ccc;
+        box-sizing: border-box;
+      }
+
+      #iframe-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sidebar">
+      <h1>Menú</h1>
+      <ul>
+        <li>
+          <a href="#" onclick="loadContent('/dataframe')"
+            >GENERAR Y MOSTRAR EL DATASET</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/missing_data')"
+            >VERIFICAR SI HAY DATOS FALTANTES</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/column_names')"
+            >MOSTRAR EL NOMBRE DE TODAS LAS COLUMNAS</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/eliminate_columns')"
+            >ELIMINAMOS LAS COLUMNAS INNECESARIAS</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/first_row_values')"
+            >OBSERVAR TODOS LOS VALORES DE LA PRIMERA FILA PARA TOMAR
+            DECICIONES</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/rename_column')"
+            >CAMBIO DE LA COLUMNA "NOMBRE" A "TIPO DE VIVIENDA" PARA MAS FACIL
+            ENTENDIMIENTO</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/area_privada_cero_chart')"
+            >VERIFICAR CUANTAS VIVIENDAS TIENEN AREA PRIVADA DE 0 METROS
+            CUADRADOS</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/eliminar_area_privada_cero')"
+            >ELIMINAR TODAS LAS FILAS CON AREA PRIVADA IGUAL A 0 POR QUE NO SE
+            NECESITAN VIVIENDAS SIN AREA PRIVADA</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/verificar_area_privada_cero')"
+            >VOLVER A VERIFICAR CUANTAS VIVIENDAS TIENEN AREA PRIVADA DE 0
+            METROS CUADRADOS</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/conteo_por_estrato')"
+            >AGRUPAR VIVIENDAS POR ESTRATOS Y MOSTRAR CUANTAS VIVIENDAS HAY EN
+            CADA ESTRATO
+          </a>
+        </li>
+        <li>
+          <a href="#" onclick="loadContent('/eliminar_estrato_cero')"
+            >ELIMINAR LAS FILAS CON ESTRATO 0 PORQUE NO EXISTE Y VOLVER A
+            MOSTRAR CUANTAS VIVIENDAS HAY EN CADA ESTRATO
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div id="content-container">
+      <!-- Contenedor para cargar los otros HTMLs -->
+      <div id="iframe-container"></div>
+    </div>
+
+    <script>
+      function loadContent(url) {
+        // Crea un iframe para cargar el contenido
+        var iframe = document.createElement("iframe");
+        iframe.src = url;
+
+        // Borra el contenido anterior y agrega el nuevo iframe
+        var iframeContainer = document.getElementById("iframe-container");
+        iframeContainer.innerHTML = "";
+        iframeContainer.appendChild(iframe);
+
+        return false; // Evita que el enlace realice la acción predeterminada
+      }
+    </script>
+  </body>
+</html>
