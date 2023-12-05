@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Importancia de Características con Random Forest</title>
+  </head>
+  <body>
+    <h1>IMPORTANCIA DE CARACTERÍSTICAS CON RANDOM FOREST</h1>
+
+    <!-- Tabla con la importancia de las características -->
+    <h2>Tabla de Importancia</h2>
+    {{ importance_html|safe }}
+
+    <!-- Gráfico de barras con la importancia de las características -->
+    <h2>Gráfico de Importancia</h2>
+    <img
+      src="data:image/png;base64,{{ importance_chart }}"
+      alt="Gráfico de Importancia"
+    />
+  </body>
+</html>

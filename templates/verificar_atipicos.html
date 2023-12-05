@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verificación de Valores Atípicos</title>
+  </head>
+  <body>
+    <h1>VERIFICACIÓN DE VALORES ATÍPICOS</h1>
+
+    {% for column, result in resultados_atipicos.items() %}
+    <h2>{{ column }} (umbral={{ result.umbral }})</h2>
+    {{ result.outliers|safe }}
+    <br />
+    {% endfor %}
+  </body>
+</html>

@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from io import BytesIO
 import base64
-
+import io
 
 app = Flask(__name__)
 
@@ -182,7 +183,76 @@ def verificar_area_privada_cero():
                            num_viviendas_con_0_m2=num_viviendas_con_0_m2)
 
 
+# Ruta para mostrar la información del DataFrame
+@app.route('/show_info')
+def show_info():
+    # Capturar la salida de la consola en un objeto StringIO
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+
+    # Obtener la información como cadena de texto
+    df_info = buffer.getvalue()
+    # Renderiza la plantilla y pasa la información del DataFrame
+    return render_template('show_info.html', df_info=df_info)
+
 # Ruta para agrupar viviendas por estratos y mostrar cuántas viviendas hay en cada estrato
+
+# Ruta para transformar y mostrar información actualizada
+
+
+# Ruta para transformar datos
+@app.route('/transformar_datos')
+def transformar_datos():
+    # Copia del DataFrame original para no modificar el original
+    df_transformado = df.copy()
+
+    # Convierte las columnas a numérico, maneja valores no esperados
+    df_transformado['habitaciones'] = pd.to_numeric(
+        df_transformado['habitaciones'], errors='coerce')
+    df_transformado['baños'] = pd.to_numeric(
+        df_transformado['baños'], errors='coerce')
+    df_transformado['parqueaderos'] = pd.to_numeric(
+        df_transformado['parqueaderos'], errors='coerce')
+    df_transformado['precio'] = pd.to_numeric(
+        df_transformado['precio'], errors='coerce')
+
+    # Convierte "No definida" a NaN
+    df_transformado.replace('No definida', pd.NA, inplace=True)
+
+    # Rellena los valores NaN con 0
+    df_transformado.fillna(0, inplace=True)
+
+    # Convierte 'area_construida' y 'area_privada' a numérico, maneja valores no esperados
+    df_transformado['area_construida'] = pd.to_numeric(
+        df_transformado['area_construida'].astype(str).str.replace(' m²', ''), errors='coerce')
+    df_transformado['area_privada'] = pd.to_numeric(
+        df_transformado['area_privada'].astype(str).str.replace(' m²', ''), errors='coerce')
+
+    # Convierte 'area_construida' y 'area_privada' a Int64
+    df_transformado['area_construida'] = df_transformado['area_construida'].round(
+    ).astype('Int64')
+    df_transformado['area_privada'] = df_transformado['area_privada'].round(
+    ).astype('Int64')
+
+    # Luego, convierte las demás columnas a int64
+    df_transformado['habitaciones'] = df_transformado['habitaciones'].astype(
+        'int64')
+    df_transformado['baños'] = df_transformado['baños'].astype('int64')
+    df_transformado['parqueaderos'] = df_transformado['parqueaderos'].astype(
+        'int64')
+    df_transformado['precio'] = df_transformado['precio'].astype('int64')
+
+    # Capturar la salida de la consola en un objeto StringIO
+    buffer = io.StringIO()
+    df_transformado.info(buf=buffer)
+
+    # Obtener la información como cadena de texto
+    df_info = buffer.getvalue()
+
+    # Renderiza la plantilla y pasa la información del DataFrame
+    return render_template('transformar_datos.html', df_info=df_info)
+
+
 @app.route('/conteo_por_estrato')
 def conteo_por_estrato():
     # Agrupar viviendas por estrato y contar el número de viviendas en cada estrato
@@ -257,6 +327,273 @@ def ver_valores_estrato():
     grupo_estrato_html = grupo_estrato.to_html(classes='data', index=False)
 
     return render_template('ver_valores_estrato.html', estrato_deseado=estrato_deseado, grupo_estrato_html=grupo_estrato_html)
+
+# Ruta para calcular el promedio del precio por cantidad de habitaciones
+
+
+# Ruta para calcular el promedio del precio por cantidad de habitaciones
+@app.route('/promedio_precio_por_habitaciones')
+def promedio_precio_por_habitaciones():
+    # Seleccionar el DataFrame a usar (df o df2)
+    current_df = df  # Puedes cambiar df2 por df según sea necesario
+
+    # Seleccionar las columnas 'precio' y 'habitaciones'
+    a = current_df['precio']
+    b = current_df['habitaciones']
+
+    # Crear un nuevo DataFrame con las columnas 'precio' y 'habitaciones'
+    df_calculo = pd.DataFrame({'precio': a, 'habitaciones': b})
+
+    # Convertir las columnas a tipos numéricos si no lo están ya
+    df_calculo['precio'] = pd.to_numeric(df_calculo['precio'], errors='coerce')
+    df_calculo['habitaciones'] = pd.to_numeric(
+        df_calculo['habitaciones'], errors='coerce')
+
+    # Eliminar filas con valores nulos
+    df_calculo = df_calculo.dropna()
+
+    # Agrupar por la cantidad de habitaciones
+    grouped = df_calculo.groupby('habitaciones')
+
+    # Inicializar listas para almacenar los resultados
+    habitaciones_values = []
+    promedio_precios = []
+
+    # Iterar sobre los grupos y calcular el promedio del precio para cada grupo de habitaciones
+    for habitaciones, group in grouped:
+        habitaciones_values.append(habitaciones)
+        promedio_precio = group['precio'].sum() / len(group)
+        promedio_precios.append(promedio_precio)
+
+    # Crear un nuevo DataFrame con los resultados
+    resultados = pd.DataFrame(
+        {'habitaciones': habitaciones_values, 'promedio_precio': promedio_precios})
+
+    # Ordenar los resultados por la cantidad de habitaciones de manera ascendente
+    resultados = resultados.sort_values(by='habitaciones')
+
+    # Convertir el DataFrame de resultados a formato HTML
+    resultados_html = resultados.to_html(classes='data', index=False)
+
+    # Graficar los resultados
+    plt.figure(figsize=(10, 6))
+    plt.plot(resultados['habitaciones'],
+             resultados['promedio_precio'], marker='o', linestyle='-')
+    plt.xlabel('Cantidad de Habitaciones')
+    plt.ylabel('Promedio del Precio')
+    plt.title('Promedio del Precio por Cantidad de Habitaciones')
+    plt.grid(True)
+
+    # Guardar la gráfica en un archivo BytesIO
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plt.close()
+
+    # Convertir la gráfica a formato base64 para mostrarla en el HTML
+    img_base64 = base64.b64encode(img.getvalue()).decode()
+
+    return render_template('promedio_precio_por_habitaciones.html', resultados_html=resultados_html, grafica_promedio_precio=img_base64)
+
+
+# Ruta para mostrar el conteo de habitaciones y su gráfica
+@app.route('/conteo_habitaciones')
+def conteo_habitaciones():
+    # Leer el DataFrame desde el archivo CSV
+    df = pd.read_csv('housing_fincaraiz_graf.csv', sep=";")
+
+    # Filtrar las filas que no sean "No definida" y que no sean 0 habitaciones
+    df = df[(df['habitaciones'] != "No definida") & (df['habitaciones'] != 0)]
+
+    # Convertir la columna "habitaciones" a tipo entero
+    df['habitaciones'] = df['habitaciones'].astype(int)
+
+    # Agrupar por la columna "habitaciones"
+    grupos = df.groupby('habitaciones')
+
+    # Contar cuántos elementos hay en cada grupo
+    conteo = grupos.size()
+
+    # Ordenar en orden ascendente por la columna "habitaciones"
+    conteo = conteo.sort_index()
+
+    # Graficar los resultados
+    plt.figure(figsize=(10, 6))
+    conteo.plot(kind='bar')
+    plt.xlabel('Habitaciones')
+    plt.ylabel('Conteo')
+    plt.title('Conteo de Habitaciones')
+
+    # Guardar la gráfica en un archivo BytesIO
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plt.close()
+
+    # Convertir la gráfica a formato base64 para mostrarla en el HTML
+    img_base64 = base64.b64encode(img.getvalue()).decode()
+
+    # Convertir el conteo a formato HTML
+    conteo_html = conteo.to_frame(name='Conteo de Habitaciones').to_html(
+        classes='data', escape=False)
+
+    return render_template('conteo_habitaciones.html', conteo_html=conteo_html, grafica_conteo=img_base64)
+
+# Ruta para mostrar el conteo de baños y su gráfica
+
+
+@app.route('/conteo_banos')
+def conteo_banos():
+    # Leer el DataFrame desde el archivo CSV
+    df = pd.read_csv('housing_fincaraiz_graf.csv', sep=";")
+
+    # Eliminar filas con 'No definida' en la columna 'baños'
+    df = df[df['baños'] != 'No definida']
+
+    # Convertir la columna "baños" a tipo entero
+    df['baños'] = df['baños'].astype(int)
+
+    # Agrupar por la columna "baños"
+    grupos = df.groupby('baños')
+
+    # Contar cuántos elementos hay en cada grupo
+    conteo = grupos.size()
+
+    # Ordenar en orden ascendente por la columna "baños"
+    conteo = conteo.sort_index()
+
+    # Graficar los resultados
+    plt.figure(figsize=(10, 6))
+    conteo.plot(kind='bar')
+    plt.xlabel('Baños')
+    plt.ylabel('Conteo')
+    plt.title('Conteo de Baños')
+
+    # Guardar la gráfica en un archivo BytesIO
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plt.close()
+
+    # Convertir la gráfica a formato base64 para mostrarla en el HTML
+    img_base64 = base64.b64encode(img.getvalue()).decode()
+
+    # Convertir el conteo a formato HTML
+    conteo_html = conteo.to_frame(name='Conteo de Baños').to_html(
+        classes='data', escape=False)
+
+    return render_template('conteo_banos.html', conteo_html=conteo_html, grafica_conteo=img_base64)
+
+# Nueva ruta para la matriz de correlación
+
+
+@app.route('/correlation_matrix')
+def correlation_matrix():
+    # Seleccionar solo las variables numéricas para la matriz de correlación
+    numeric_columns = df.select_dtypes(include=['int64', 'Int64']).columns
+    numeric_data = df[numeric_columns]
+
+    # Calcular la matriz de correlación
+    correlation_matrix = numeric_data.corr()
+
+    # Crear un mapa de calor con la matriz de correlación
+    plt.figure(figsize=(15, 10))
+    sns.heatmap(correlation_matrix, annot=True,
+                cmap='coolwarm', fmt=".2f", linewidths=.5)
+    plt.title('Matriz de Correlación')
+
+    # Guardar la gráfica en un archivo BytesIO
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plt.close()
+
+    # Convertir la gráfica a formato base64 para mostrarla en el HTML
+    img_base64 = base64.b64encode(img.getvalue()).decode()
+
+    return render_template('correlation_matrix.html', correlation_matrix=img_base64)
+
+
+def detectar_valores_atipicos(df, columns_to_check, umbral_atipico):
+    informe_html = ""
+
+    for column_to_check in columns_to_check:
+        try:
+            numeric_values = pd.to_numeric(
+                df[column_to_check], errors='coerce')
+            numeric_values = numeric_values.dropna()
+        except pd.errors.OutOfBoundsDatetime:
+            informe_html += f'<p>No se puede convertir la columna {column_to_check} a valores numéricos.</p>'
+            continue
+
+        mean_value = numeric_values.mean()
+        std_dev = numeric_values.std()
+
+        umbral_superior = mean_value + umbral_atipico * std_dev
+        umbral_inferior = mean_value - umbral_atipico * std_dev
+
+        bool_index = numeric_values.index
+        bool_series = (numeric_values > umbral_superior) | (
+            numeric_values < umbral_inferior)
+
+        outliers = df.loc[bool_index][bool_series]
+
+        informe_html += f'<h2>Valores atípicos en {column_to_check} (umbral={umbral_atipico}):</h2>'
+        informe_html += outliers.to_html(index=False, classes='data')
+
+    return informe_html
+
+# Nueva ruta para verificar valores atípicos
+
+
+@app.route('/verificar_atipicos')
+def verificar_atipicos():
+    # Lista de columnas para verificar
+    columns_to_check = ['habitaciones', 'baños', 'parqueaderos', 'area_construida', 'area_privada', 'estrato', 'estado',
+                        'antiguedad', 'administracion', 'precio_m2', 'nombre', 'ubicacion', 'precio']
+
+    # Ajustar el umbral a 2
+    umbral_atipico = 8  # Puedes ajustar este valor según tus necesidades
+
+    # Almacenar resultados
+    resultados_atipicos = {}
+
+    # Iterar sobre las columnas y verificar valores atípicos
+    for column_to_check in columns_to_check:
+        # Intentar convertir la columna a valores numéricos y manejar los errores
+        try:
+            numeric_values = pd.to_numeric(
+                df[column_to_check], errors='coerce')
+            numeric_values = numeric_values.dropna()
+        except pd.errors.OutOfBoundsDatetime:
+            print(
+                f'No se puede convertir la columna {column_to_check} a valores numéricos.')
+            continue
+
+        # Calcular el promedio y la desviación estándar
+        mean_value = numeric_values.mean()
+        std_dev = numeric_values.std()
+
+        # Establecer umbrales para valores atípicos en ambas direcciones
+        umbral_superior = mean_value + umbral_atipico * std_dev
+        umbral_inferior = mean_value - umbral_atipico * std_dev
+
+        # Asegurarse de que las series booleanas tengan el mismo índice
+        bool_index = numeric_values.index
+        bool_series = (numeric_values > umbral_superior) | (
+            numeric_values < umbral_inferior)
+
+        # Identificar valores atípicos
+        outliers = df.loc[bool_index][bool_series]
+
+        # Almacenar los resultados
+        resultados_atipicos[column_to_check] = {
+            'umbral': umbral_atipico,
+            'outliers': outliers.to_html(classes='data', index=False)
+        }
+
+    # Renderizar la plantilla y pasar los resultados
+    return render_template('verificar_atipicos.html', resultados_atipicos=resultados_atipicos)
 
 
 if __name__ == '__main__':

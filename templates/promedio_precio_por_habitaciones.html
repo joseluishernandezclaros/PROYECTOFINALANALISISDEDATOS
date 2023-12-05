@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Promedio del Precio por Cantidad de Habitaciones</title>
+  </head>
+  <body>
+    <h1>Promedio del Precio por Cantidad de Habitaciones</h1>
+
+    {% if resultados_html %} {{ resultados_html|safe }}
+
+    <h2>Gráfica del Promedio de Precio por Cantidad de Habitaciones</h2>
+    <img
+      src="data:image/png;base64, {{ grafica_promedio_precio }}"
+      alt="Gráfica del Promedio de Precio por Cantidad de Habitaciones"
+    />
+    {% else %}
+    <p>No hay información disponible.</p>
+    {% endif %}
+  </body>
+</html>

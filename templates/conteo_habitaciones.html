@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conteo de Habitaciones</title>
+  </head>
+  <body>
+    <h1>Conteo de Habitaciones</h1>
+
+    {% if conteo_html %} {{ conteo_html|safe }}
+
+    <h2>GRAFICA DE CONTEO DE HABITACIONES</h2>
+    <img
+      src="data:image/png;base64, {{ grafica_conteo }}"
+      alt="Gráfica de Conteo de Habitaciones"
+    />
+    {% else %}
+    <p>No hay información disponible.</p>
+    {% endif %}
+  </body>
+</html>
