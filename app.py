@@ -19,7 +19,6 @@ def crear_app():
 
     # Cargar el DataFrame desde el archivo CSV
     df = pd.read_csv('housing_fincaraiz_graf.csv', sep=";")
-    df2 = pd.read_csv('housing_fincaraiz.csv', sep=";")
 
     # Ruta para la página principal
 
@@ -584,6 +583,70 @@ def crear_app():
 
         # Renderizar la plantilla y pasar los resultados
         return render_template('verificar_atipicos.html', resultados_atipicos=resultados_atipicos)
+
+    @app.route('/random_forest')
+    def entrenar_random_forest():
+        # Seleccionar las características para el modelo
+        features = ['habitaciones', 'baños', 'parqueaderos', 'area_construida', 'area_privada',
+                    'estrato', 'Ascensor', 'Circuito cerrado de TV', 'Parqueadero Visitantes',
+                    'Portería / Recepción', 'Zonas Verdes', 'Salón Comunal', 'Balcón', 'Barra estilo americano',
+                    'Calentador', 'Chimenea', 'Citófono', 'Cocina Integral', 'Terraza', 'Vigilancia',
+                    'Parques cercanos', 'Estudio', 'Patio', 'Depósito / Bodega']
+
+        # Filtrar las filas que no tienen "No definida"
+        df_filtered = df[~df.isin(['No definida'])]
+
+        # Eliminar filas con valores nulos después de filtrar "No definida"
+        df_filtered = df_filtered.dropna()
+
+        # Limpiar 'area_construida' y 'area_privada'
+        df_filtered['area_construida'] = pd.to_numeric(
+            df_filtered['area_construida'].astype(str).str.replace(' m²', ''), errors='coerce')
+        df_filtered['area_privada'] = pd.to_numeric(
+            df_filtered['area_privada'].astype(str).str.replace(' m²', ''), errors='coerce')
+
+        # Reemplazar 'E' por 'e' en las columnas 'area_construida' y 'area_privada'
+        df_filtered['area_construida'] = df_filtered['area_construida'].astype(
+            str).str.replace('E', 'e')
+        df_filtered['area_privada'] = df_filtered['area_privada'].astype(
+            str).str.replace('E', 'e')
+
+        # Convertir las columnas 'area_construida' y 'area_privada' a tipo numérico
+        df_filtered['area_construida'] = pd.to_numeric(
+            df_filtered['area_construida'], errors='coerce')
+        df_filtered['area_privada'] = pd.to_numeric(
+            df_filtered['area_privada'], errors='coerce')
+
+        # Redondear a Int64
+        df_filtered['area_construida'] = df_filtered['area_construida'].round().astype(
+            'Int64')
+        df_filtered['area_privada'] = df_filtered['area_privada'].round().astype(
+            'Int64')
+
+        # Convertir características seleccionadas a tipo numérico
+        X = df_filtered[features].astype(float)
+
+        # Convertir la columna objetivo 'precio' a tipo numérico
+        y = df_filtered['precio'].astype(float)
+
+        # Dividir el conjunto de datos en entrenamiento (80%) y prueba (20%)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42)
+
+        # Inicializar el modelo de Random Forest
+        rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+
+        # Entrenar el modelo
+        rf_model.fit(X_train, y_train)
+
+        # Realizar predicciones en el conjunto de prueba
+        y_pred = rf_model.predict(X_test)
+
+        # Calcular el error cuadrático medio en el conjunto de prueba
+        mse = mean_squared_error(y_test, y_pred)
+        print(f'Error Cuadrático Medio en el conjunto de prueba: {mse}')
+
+        return render_template('RandomForest.html', importance_html=importance_html, importance_chart=img_base64)
     return app
 
 
